@@ -1,0 +1,21 @@
+Metadata-Version: 2.4
+Name: neurolab-data
+Version: 0.1.0
+Summary: Unified data management across local and HPC environments for EEG research
+License-Expression: MIT
+Requires-Python: >=3.10
+Requires-Dist: neurolab-config>=0.1.0
+Requires-Dist: numpy>=1.24
+Requires-Dist: pyyaml>=6.0
+Provides-Extra: eeg
+Requires-Dist: mne>=1.6; extra == "eeg"
+Requires-Dist: braindecode>=0.8; extra == "eeg"
+Provides-Extra: processing
+Requires-Dist: mne>=1.6; extra == "processing"
+Requires-Dist: scipy>=1.11; extra == "processing"
+Requires-Dist: joblib>=1.3; extra == "processing"
+Provides-Extra: torch
+Requires-Dist: torch>=2.0; extra == "torch"
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: mne>=1.6; extra == "dev"

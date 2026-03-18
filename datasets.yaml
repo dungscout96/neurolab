@@ -1,0 +1,84 @@
+# ── Dataset Registry ─────────────────────────────────────────────────
+# Central catalog of all EEG datasets used across projects.
+# Paths are RELATIVE to the cluster's data root (resolved at runtime).
+
+datasets:
+
+  # ── HBN (Healthy Brain Network) ─────────────────────────────────
+  hbn_R1_ThePresent:
+    relative_path: hbn/preprocessed/R1/ThePresent
+    format: fif
+    description: "HBN Release 1 - ThePresent movie viewing task (preprocessed, 200Hz)"
+    splits:
+      train: hbn/preprocessed/R1/ThePresent
+      val: hbn/preprocessed/R5/ThePresent
+      test: hbn/preprocessed/R6/ThePresent
+    metadata:
+      sfreq: 200
+      n_channels: 129
+      montage: GSN-HydroCel-129
+      task: ThePresent
+      duration_s: 203.3
+
+  hbn_R1_DespicableMe:
+    relative_path: hbn/preprocessed/R1/DespicableMe
+    format: fif
+    description: "HBN Release 1 - Despicable Me movie viewing task"
+    splits:
+      train: hbn/preprocessed/R1/DespicableMe
+      val: hbn/preprocessed/R5/DespicableMe
+      test: hbn/preprocessed/R6/DespicableMe
+    metadata:
+      sfreq: 200
+      n_channels: 129
+      task: DespicableMe
+
+  hbn_R1_RestingState:
+    relative_path: hbn/preprocessed/R1/RestingState
+    format: fif
+    description: "HBN Release 1 - Resting state recordings"
+    splits:
+      train: hbn/preprocessed/R1/RestingState
+      val: hbn/preprocessed/R5/RestingState
+      test: hbn/preprocessed/R6/RestingState
+    metadata:
+      sfreq: 200
+      n_channels: 129
+      task: RestingState
+
+  # ── BCI Competition ──────────────────────────────────────────────
+  bcic2a:
+    relative_path: moabb/BNCI2014_001
+    format: moabb
+    description: "BCI Competition IV 2a - 4-class motor imagery"
+    metadata:
+      n_classes: 4
+      classes: [feet, left_hand, right_hand, tongue]
+      n_subjects: 9
+      sfreq: 250
+      loader_type: moabb
+      dataset_name: BNCI2014_001
+
+  # ── PhysioNet ────────────────────────────────────────────────────
+  physionet:
+    relative_path: moabb/PhysionetMI
+    format: moabb
+    description: "PhysioNet Motor Imagery dataset"
+    metadata:
+      loader_type: moabb
+      dataset_name: PhysionetMI
+
+  # ── EEGDash ──────────────────────────────────────────────────────
+  eegdash_resting:
+    relative_path: eegdash/resting
+    format: eegdash
+    description: "EEGDash resting state classification"
+    metadata:
+      loader_type: eegdash
+
+  eegdash_sex:
+    relative_path: eegdash/sex
+    format: eegdash
+    description: "EEGDash sex classification from resting EEG"
+    metadata:
+      loader_type: eegdash

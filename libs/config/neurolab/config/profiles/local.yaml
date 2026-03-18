@@ -1,0 +1,23 @@
+# Local development environment
+name: local
+scheduler: local
+hostname_patterns: []  # Fallback — used when no HPC hostname matches
+
+paths:
+  data: ~/data/eeg
+  scratch: /tmp/neurolab
+  results: ~/results
+  conda_envs: ~/miniconda3/envs
+  cache: ~/.cache/neurolab
+
+# No SLURM on local
+# slurm: null
+
+modules: []
+
+conda_env: ""  # Use system/active environment
+
+env_vars:
+  WANDB_MODE: online
+  HF_HOME: ~/.cache/huggingface
+  MNE_DATA: ~/mne_data

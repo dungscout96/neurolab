@@ -1,0 +1,27 @@
+# Jamming — personal dev GPU workstation
+# Direct execution (no SLURM), NVIDIA GPU with system CUDA
+name: jamming
+scheduler: local
+hostname_patterns:
+  - jamming
+
+login_host: 100.113.196.11
+
+paths:
+  data: ~/data
+  scratch: /tmp/neurolab
+  results: ~/results
+  conda_envs: ~/miniconda3/envs
+  cache: ~/.cache/neurolab
+
+# No SLURM — jobs run directly
+# slurm: null
+
+modules: []  # System CUDA, no module loading
+
+conda_env: ""  # Use active environment
+
+env_vars:
+  WANDB_MODE: online
+  HF_HOME: ~/.cache/huggingface
+  MNE_DATA: ~/mne_data

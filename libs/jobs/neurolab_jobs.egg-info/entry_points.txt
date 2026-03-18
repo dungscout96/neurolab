@@ -1,0 +1,4 @@
+[console_scripts]
+neurolab-logs = neurolab.jobs.cli:main_logs
+neurolab-status = neurolab.jobs.cli:main_status
+neurolab-submit = neurolab.jobs.cli:main_submit

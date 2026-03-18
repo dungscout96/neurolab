@@ -1,0 +1,41 @@
+# SDSC Expanse HPC cluster
+# Docs: https://www.sdsc.edu/systems/expanse/user_guide.html
+name: expanse
+scheduler: slurm
+hostname_patterns:
+  - expanse
+  - tscc
+
+login_host: login.expanse.sdsc.edu
+
+paths:
+  data: /expanse/projects/nemar/dtyoung/data
+  scratch: /expanse/lustre/scratch/dtyoung/temp_project
+  results: /expanse/projects/nemar/dtyoung/results
+  conda_envs: /expanse/projects/nemar/dtyoung/conda_envs
+  cache: /expanse/projects/nemar/dtyoung/.cache
+
+slurm:
+  partition: gpu-shared
+  account: csd403
+  gpus_per_node: 1
+  cpus_per_task: 8
+  mem_gb: 64
+  time_limit: "02:00:00"
+  nodes: 1
+  tasks_per_node: 1
+
+modules:
+  - gpu
+  - cuda12.2/toolkit/12.2.2
+
+conda_env: /expanse/projects/nemar/dtyoung/conda_envs/neurolab
+
+env_vars:
+  HF_HOME: /expanse/projects/nemar/dtyoung/huggingface_cache
+  MNE_DATA: /expanse/projects/nemar/dtyoung/mne_data
+  EXCA_CACHE_DIR: /expanse/projects/nemar/dtyoung/.cache/exa
+  WANDB_MODE: offline
+
+# Optional: path to a .env file for secrets (API keys, tokens)
+# env_file: ~/.neurolab/.env

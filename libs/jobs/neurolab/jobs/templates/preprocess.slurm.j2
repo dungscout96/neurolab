@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+{# Template for CPU-heavy data preprocessing jobs.
+   Uses higher CPU count and no GPU by default.
+
+   Variables:
+     job_name, partition, account, cpus, mem_gb, time_limit,
+     env_setup, working_dir, command, log_dir, n_jobs
+#}
+#SBATCH --job-name={{ job_name }}
+#SBATCH --partition={{ partition | default("shared") }}
+#SBATCH --account={{ account }}
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task={{ cpus | default(16) }}
+#SBATCH --mem={{ mem_gb | default(128) }}G
+#SBATCH --time={{ time_limit | default("08:00:00") }}
+#SBATCH --output={{ log_dir | default("logs") }}/{{ job_name }}_%j.out
+#SBATCH --error={{ log_dir | default("logs") }}/{{ job_name }}_%j.err
+
+# ── Environment setup ──
+{{ env_setup }}
+
+mkdir -p {{ log_dir | default("logs") }}
+
+{% if working_dir %}
+cd {{ working_dir }}
+{% endif %}
+
+echo "=== Preprocessing job $SLURM_JOB_ID on $(hostname) at $(date) ==="
+echo "CPUs: $SLURM_CPUS_PER_TASK"
+echo ""
+
+# ── Preprocessing command ──
+{{ command }}
+
+echo ""
+echo "=== Job $SLURM_JOB_ID finished at $(date) ==="
