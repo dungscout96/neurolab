@@ -10,11 +10,9 @@ requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "Young", email = "dt.young112@gmail.com" }]
 
-# Top-level package installs all three sub-libraries
 dependencies = [
-    "neurolab-config",
-    "neurolab-jobs",
-    "neurolab-data",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
 ]
 
 [project.optional-dependencies]
@@ -26,12 +24,21 @@ dev = [
     "mypy>=1.5",
 ]
 
-[tool.setuptools]
-packages = []
+[project.scripts]
+neurolab-submit = "neurolab.jobs.cli:main_submit"
+neurolab-status = "neurolab.jobs.cli:main_status"
+neurolab-logs = "neurolab.jobs.cli:main_logs"
 
 # ── Developer workflow ──────────────────────────────────────────────
-# Install everything in editable mode:
-#   pip install -e ./libs/config -e ./libs/jobs -e ./libs/data -e ".[dev]"
+# Install in editable mode:
+#   pip install -e ".[dev]"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["neurolab*"]
+
+[tool.setuptools.package-data]
+"neurolab.jobs" = ["profiles/*.yaml"]
 
 [tool.black]
 line-length = 100

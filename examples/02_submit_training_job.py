@@ -1,35 +1,35 @@
 """Example: Submitting a training job to Expanse via neurolab-jobs.
 
-Demonstrates how to create and submit a SLURM job that runs
+Demonstrates how to create and submit a Job that runs
 an OpenEEG-Bench training experiment, monitor it, and retrieve logs.
 """
 
-from neurolab.jobs import SlurmJob, submit_job, monitor_jobs, get_logs
+from neurolab.jobs import Job, monitor_jobs, get_logs
 
 
 def main():
     # ── Define the job ──────────────────────────────────────────────
-    job = SlurmJob(
+    job = Job(
         name="train_labram_lora_bcic2a",
-        command="python scripts/train.py adapter=lora model=labram data=bcic2a",
         cluster="expanse",
+        repo_path="/expanse/projects/nemar/dtyoung/OpenEEG-Bench",
+        command="python scripts/train.py adapter=lora model=labram data=bcic2a",
+        venv="/expanse/projects/nemar/dtyoung/conda_envs/adapter-finetuning",
+        branch="main",
         time_limit="04:00:00",
         gpus=1,
-        working_dir="/expanse/projects/nemar/adapter_finetuning",
-        log_dir="logs",
-        env_overrides={
+        env_vars={
             "WANDB_MODE": "online",  # Override default offline for this run
         },
     )
 
     # ── Dry run to inspect the generated script ─────────────────────
-    script_path = submit_job(job, dry_run=True, script_dir="slurm/generated")
-    print(f"Generated script: {script_path}")
-    with open(script_path) as f:
-        print(f.read())
+    script = job.submit(dry_run=True)
+    print("--- Generated SLURM script ---")
+    print(script)
 
     # ── Submit (uncomment when ready) ───────────────────────────────
-    # job_id = submit_job(job)
+    # job_id = job.submit()
     # print(f"Submitted job: {job_id}")
     #
     # # ── Monitor ──────────────────────────────────────────────────

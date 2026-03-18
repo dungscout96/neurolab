@@ -93,8 +93,20 @@ class ClusterConfig:
     login_host: str = ""
     """SSH login hostname (e.g. 'login.expanse.sdsc.edu')."""
 
+    ssh_alias: str = ""
+    """SSH config alias for this cluster (e.g. 'expanse', 'delta').
+    Maps to a Host entry in ~/.ssh/config. Used for all remote commands.
+    If empty, falls back to login_host."""
+
     scheduler: str = "slurm"
     """Job scheduler type. 'slurm' for HPC, 'local' for direct execution."""
+
+    @property
+    def ssh_target(self) -> str:
+        """The SSH target to use for remote commands.
+        Prefers ssh_alias (matching ~/.ssh/config Host entries),
+        falls back to login_host."""
+        return self.ssh_alias or self.login_host
 
     @property
     def is_hpc(self) -> bool:
@@ -194,6 +206,7 @@ def _load_yaml_profile(path: Path) -> ClusterConfig:
         conda_env=raw.get("conda_env", ""),
         env_vars=env_vars,
         login_host=raw.get("login_host", ""),
+        ssh_alias=raw.get("ssh_alias", ""),
         scheduler=raw.get("scheduler", "slurm" if slurm_raw else "local"),
     )
 

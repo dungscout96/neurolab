@@ -1,3 +1,5 @@
 .venv
 **/libs/config/neurolab_config.egg-info/*
 **/__pycache__/*
+.DS_Store
+**/neurolab.egg-info/*

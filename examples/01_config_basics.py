@@ -1,10 +1,10 @@
-"""Example: Using neurolab-config for cluster-aware configuration.
+"""Example: Using neurolab-jobs for cluster-aware configuration.
 
 Shows how to auto-detect the cluster, access paths and env vars,
 and generate environment setup scripts.
 """
 
-from neurolab.config import (
+from neurolab.jobs import (
     auto_detect_cluster,
     get_cluster,
     list_clusters,

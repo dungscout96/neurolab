@@ -6,6 +6,7 @@ hostname_patterns:
   - jamming
 
 login_host: 100.113.196.11
+ssh_alias: ""  # no alias needed — uses login_host IP directly (no 2FA)
 
 paths:
   data: ~/data

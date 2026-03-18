@@ -8,6 +8,7 @@ hostname_patterns:
   - gpua
 
 login_host: login.delta.ncsa.illinois.edu
+ssh_alias: delta  # matches Host entry in ~/.ssh/config
 
 paths:
   data: /projects/bcfj/dtyoung/data

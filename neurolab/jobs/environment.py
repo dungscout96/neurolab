@@ -11,7 +11,7 @@ import os
 import subprocess
 from pathlib import Path
 
-from neurolab.config.cluster import ClusterConfig, auto_detect_cluster
+from neurolab.jobs.config import ClusterConfig, auto_detect_cluster
 
 
 class EnvironmentManager:
@@ -21,7 +21,7 @@ class EnvironmentManager:
     and can generate shell scripts for SLURM job preambles.
 
     Usage:
-        from neurolab.config import EnvironmentManager, get_cluster
+        from neurolab.jobs import EnvironmentManager, get_cluster
 
         env = EnvironmentManager(get_cluster("expanse"))
         env.apply()          # Sets os.environ for current process

@@ -1,20 +1,20 @@
 .PHONY: install install-dev lint test clean
 
-# Install all sub-libraries in editable mode
+# Install in editable mode
 install:
-	pip install -e ./libs/config -e ./libs/jobs -e ./libs/data
+	pip install -e .
 
 # Install with dev dependencies
 install-dev:
-	pip install -e "./libs/config[dev]" -e "./libs/jobs[dev]" -e "./libs/data[dev]" -e ".[dev]"
+	pip install -e ".[dev]"
 
 lint:
-	ruff check libs/ tests/ examples/
-	black --check libs/ tests/ examples/
+	ruff check neurolab/ tests/ examples/
+	black --check neurolab/ tests/ examples/
 
 format:
-	ruff check --fix libs/ tests/ examples/
-	black libs/ tests/ examples/
+	ruff check --fix neurolab/ tests/ examples/
+	black neurolab/ tests/ examples/
 
 test:
 	pytest tests/ -v

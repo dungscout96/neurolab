@@ -1,4 +1,4 @@
-"""Tests for neurolab-config."""
+"""Tests for cluster configuration (merged into neurolab-jobs)."""
 
 import os
 import tempfile
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from neurolab.config import (
+from neurolab.jobs import (
     ClusterConfig,
     ClusterPaths,
     SlurmDefaults,

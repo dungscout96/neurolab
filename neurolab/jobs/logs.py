@@ -1,17 +1,17 @@
-"""SLURM log retrieval and parsing.
+"""Job log retrieval and parsing.
 
 Provides utilities to fetch, search, and tail job output/error logs
-from local paths or remote clusters via SSH.
+from remote clusters via SSH. Works for both SLURM jobs (log files
+named by job ID) and direct jobs (log files named by job name).
 """
 
 from __future__ import annotations
 
 import re
-import subprocess
 from dataclasses import dataclass, field
-from pathlib import Path
 
-from neurolab.config import get_cluster, ClusterConfig
+from neurolab.jobs.config import ClusterConfig, get_cluster
+from neurolab.jobs.submit import ssh_run
 
 
 @dataclass
@@ -80,110 +80,89 @@ class LogResult:
         return "\n\n".join(parts)
 
 
-def _find_log_files(
-    job_id: str,
-    log_dir: str = "logs",
-    job_name: str = "",
-) -> tuple[Path | None, Path | None]:
-    """Find stdout and stderr log files for a job.
-
-    Searches for common naming patterns:
-    - {job_name}_{job_id}.out / .err
-    - slurm-{job_id}.out
-    - train_{job_id}.out / .err
-    """
-    log_path = Path(log_dir)
-    if not log_path.is_dir():
-        return None, None
-
-    patterns = [
-        f"*_{job_id}.out",
-        f"*_{job_id}.err",
-        f"slurm-{job_id}.out",
-    ]
-
-    stdout_file = None
-    stderr_file = None
-
-    for f in log_path.iterdir():
-        if job_id in f.name:
-            if f.suffix == ".out":
-                stdout_file = f
-            elif f.suffix == ".err":
-                stderr_file = f
-
-    return stdout_file, stderr_file
-
-
 def get_logs(
     job_id: str,
     cluster: str = "expanse",
     log_dir: str = "logs",
-    job_name: str = "",
-    ssh: bool = False,
+    repo_path: str = "",
+    name: str = "",
 ) -> LogResult:
-    """Retrieve stdout and stderr logs for a SLURM job.
+    """Retrieve stdout and stderr logs for a job via SSH.
+
+    Searches for log files matching common naming patterns in the
+    specified log directory on the remote cluster.
+
+    For SLURM jobs, looks for: *_{job_id}.out, slurm-{job_id}.out
+    For direct (PID) jobs, looks for: {name}.out, {name}.err
 
     Args:
-        job_id: SLURM job ID.
+        job_id: SLURM job ID or PID.
         cluster: Cluster name.
-        log_dir: Directory containing log files.
-        job_name: Job name prefix for log files.
-        ssh: If True, fetch logs via SSH from the cluster.
+        log_dir: Directory containing log files (relative to repo_path or absolute).
+        repo_path: If set, log_dir is resolved relative to this path.
+        name: Job name (required for direct/PID-based jobs to find log files).
 
     Returns:
         LogResult with stdout and stderr content.
     """
     cfg = get_cluster(cluster)
-
-    if ssh:
-        return _get_logs_ssh(job_id, cfg, log_dir, job_name)
-
-    stdout_file, stderr_file = _find_log_files(job_id, log_dir, job_name)
-
     result = LogResult(job_id=job_id)
 
-    if stdout_file and stdout_file.exists():
-        result.stdout = stdout_file.read_text()
-        result.stdout_path = str(stdout_file)
+    # Build the remote log directory path
+    if repo_path and not log_dir.startswith("/"):
+        remote_log_dir = f"{repo_path}/{log_dir}"
+    else:
+        remote_log_dir = log_dir
 
-    if stderr_file and stderr_file.exists():
-        result.stderr = stderr_file.read_text()
-        result.stderr_path = str(stderr_file)
+    if cfg.is_hpc:
+        _fetch_slurm_logs(result, cfg, remote_log_dir, job_id)
+    else:
+        _fetch_direct_logs(result, cfg, remote_log_dir, name or job_id)
 
     return result
 
 
-def _get_logs_ssh(
+def _fetch_slurm_logs(
+    result: LogResult,
+    cfg: ClusterConfig,
+    remote_log_dir: str,
     job_id: str,
-    cluster: ClusterConfig,
-    log_dir: str,
-    job_name: str,
-) -> LogResult:
-    """Fetch logs via SSH from a remote cluster."""
-    if not cluster.login_host:
-        raise ValueError(f"Cluster '{cluster.name}' has no login_host for SSH")
-
-    result = LogResult(job_id=job_id)
-
-    # Try common patterns
+) -> None:
+    """Fetch SLURM-style log files (*_{job_id}.out/.err)."""
     for suffix, attr in [(".out", "stdout"), (".err", "stderr")]:
-        for pattern in [f"{log_dir}/*_{job_id}{suffix}", f"{log_dir}/slurm-{job_id}{suffix}"]:
-            try:
-                cmd_result = subprocess.run(
-                    ["ssh", cluster.login_host, f"cat {pattern}"],
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                )
-                if cmd_result.returncode == 0 and cmd_result.stdout:
-                    setattr(result, attr, cmd_result.stdout)
-                    setattr(result, f"{attr}_path", pattern)
-                    break
-            except (subprocess.TimeoutExpired, subprocess.CalledProcessError):
-                continue
+        # Find matching files on the remote
+        find_cmd = f"ls {remote_log_dir}/*_{job_id}{suffix} 2>/dev/null | head -1"
+        find_result = ssh_run(cfg, find_cmd, check=False)
+        remote_path = find_result.stdout.strip()
 
-    return result
+        if remote_path:
+            cat_result = ssh_run(cfg, f"cat {remote_path}", check=False)
+            if cat_result.returncode == 0:
+                setattr(result, attr, cat_result.stdout)
+                setattr(result, f"{attr}_path", remote_path)
+            continue
+
+        # Try slurm-{job_id}.out pattern
+        slurm_path = f"{remote_log_dir}/slurm-{job_id}{suffix}"
+        cat_result = ssh_run(cfg, f"cat {slurm_path} 2>/dev/null", check=False)
+        if cat_result.returncode == 0 and cat_result.stdout:
+            setattr(result, attr, cat_result.stdout)
+            setattr(result, f"{attr}_path", slurm_path)
+
+
+def _fetch_direct_logs(
+    result: LogResult,
+    cfg: ClusterConfig,
+    remote_log_dir: str,
+    name: str,
+) -> None:
+    """Fetch direct-style log files ({name}.out/.err)."""
+    for suffix, attr in [(".out", "stdout"), (".err", "stderr")]:
+        remote_path = f"{remote_log_dir}/{name}{suffix}"
+        cat_result = ssh_run(cfg, f"cat {remote_path} 2>/dev/null", check=False)
+        if cat_result.returncode == 0 and cat_result.stdout:
+            setattr(result, attr, cat_result.stdout)
+            setattr(result, f"{attr}_path", remote_path)
 
 
 def tail_logs(
@@ -191,21 +170,26 @@ def tail_logs(
     cluster: str = "expanse",
     n_lines: int = 50,
     log_dir: str = "logs",
-    ssh: bool = False,
+    repo_path: str = "",
+    name: str = "",
 ) -> str:
     """Get the last n lines of logs for a job.
 
     Convenience wrapper around get_logs() that returns just the tail.
 
     Args:
-        job_id: SLURM job ID.
+        job_id: SLURM job ID or PID.
         cluster: Cluster name.
         n_lines: Number of trailing lines to return.
         log_dir: Directory containing log files.
-        ssh: If True, fetch via SSH.
+        repo_path: If set, log_dir is resolved relative to this path.
+        name: Job name (for direct/PID-based jobs).
 
     Returns:
         Formatted string with the tail of stdout and stderr.
     """
-    result = get_logs(job_id, cluster=cluster, log_dir=log_dir, ssh=ssh)
+    result = get_logs(
+        job_id, cluster=cluster, log_dir=log_dir,
+        repo_path=repo_path, name=name,
+    )
     return result.tail(n=n_lines)

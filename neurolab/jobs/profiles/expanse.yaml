@@ -7,6 +7,7 @@ hostname_patterns:
   - tscc
 
 login_host: login.expanse.sdsc.edu
+ssh_alias: expanse  # matches Host entry in ~/.ssh/config
 
 paths:
   data: /expanse/projects/nemar/dtyoung/data
