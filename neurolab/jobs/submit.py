@@ -208,10 +208,10 @@ def _build_preamble(job: Job, cluster: ClusterConfig) -> str:
         for mod in cluster.modules:
             lines.append(f"module load {mod}")
 
-    # 4. Virtual environment activation
+    # 4. Virtual environment: prepend bin/ to PATH (activation-agnostic)
     venv = job.venv if job.venv else cluster.conda_env
     if venv and venv != "__none__":
-        lines.append(f"source activate {venv}")
+        lines.append(f'export PATH="{venv}/bin:$PATH"')
 
     # 5. Environment variables: cluster defaults + job overrides
     merged_env = {**cluster.env_vars, **job.env_vars}
@@ -241,7 +241,10 @@ def _render_slurm_script(job: Job, cluster: ClusterConfig) -> str:
         f"#SBATCH --nodes={slurm.nodes}",
         f"#SBATCH --ntasks-per-node={slurm.tasks_per_node}",
         f"#SBATCH --cpus-per-task={cpus}",
-        f"#SBATCH --gpus={job.gpus}",
+    ]
+    if job.gpus > 0:
+        lines.append(f"#SBATCH --gpus={job.gpus}")
+    lines += [
         f"#SBATCH --mem={mem}G",
         f"#SBATCH --time={time_limit}",
         f"#SBATCH --output={job.log_dir}/{job.name}_%j.out",

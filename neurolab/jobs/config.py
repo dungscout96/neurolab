@@ -134,7 +134,7 @@ class ClusterConfig:
 
         # Conda activation
         if self.conda_env:
-            lines.append(f"source activate {self.conda_env}")
+            lines.append(f'export PATH="{self.conda_env}/bin:$PATH"')
             lines.append("")
 
         # Environment variables

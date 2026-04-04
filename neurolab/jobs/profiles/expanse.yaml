@@ -18,7 +18,7 @@ paths:
 
 slurm:
   partition: gpu-shared
-  account: csd403
+  account: ddp483
   gpus_per_node: 1
   cpus_per_task: 8
   mem_gb: 64

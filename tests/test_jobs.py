@@ -67,7 +67,7 @@ def test_preamble_venv_activation():
     )
     cfg = get_cluster("expanse")
     preamble = _build_preamble(job, cfg)
-    assert "source activate /my/custom/conda_env" in preamble
+    assert 'export PATH="/my/custom/conda_env/bin:$PATH"' in preamble
 
 
 def test_preamble_cluster_default_venv():
@@ -75,8 +75,7 @@ def test_preamble_cluster_default_venv():
     job = Job(name="t", cluster="expanse", repo_path="/repo", command="echo")
     cfg = get_cluster("expanse")
     preamble = _build_preamble(job, cfg)
-    assert "source activate" in preamble
-    assert cfg.conda_env in preamble
+    assert f'export PATH="{cfg.conda_env}/bin:$PATH"' in preamble
 
 
 def test_preamble_skip_venv():
@@ -87,7 +86,7 @@ def test_preamble_skip_venv():
     )
     cfg = get_cluster("expanse")
     preamble = _build_preamble(job, cfg)
-    assert "source activate" not in preamble
+    assert "__none__" not in preamble
 
 
 def test_preamble_env_vars_merged():
@@ -148,7 +147,7 @@ def test_slurm_script_render():
     assert "#SBATCH --time=04:00:00" in script
     assert "cd /expanse/projects/nemar/dtyoung/OpenEEG-Bench" in script
     assert "git checkout main" in script
-    assert "source activate /expanse/projects/nemar/dtyoung/conda_envs/adapter-finetuning" in script
+    assert 'export PATH="/expanse/projects/nemar/dtyoung/conda_envs/adapter-finetuning/bin:$PATH"' in script
     assert "module purge" in script
     assert "module load gpu" in script
     assert "python scripts/train.py adapter=lora model=labram" in script

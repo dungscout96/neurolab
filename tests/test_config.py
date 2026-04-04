@@ -90,7 +90,7 @@ def test_render_env_setup():
     script = expanse.render_env_setup()
     assert "module purge" in script
     assert "module load gpu" in script
-    assert "source activate" in script
+    assert "export PATH=" in script
     assert "export HF_HOME=" in script
 
 
