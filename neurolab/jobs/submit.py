@@ -83,6 +83,12 @@ class Job:
     partition: str | None = None
     """SLURM partition override. Defaults to the cluster profile's default."""
 
+    account: str | None = None
+    """SLURM account / allocation override. Defaults to the cluster profile's
+    default. Needed when one user has multiple allocations bound to different
+    partitions (e.g. on Expanse, GPU allocations like ``ddp483`` can't submit
+    to CPU partitions like ``shared`` — override to a CPU account here)."""
+
     cpus_per_task: int | None = None
     """CPUs per task override. Defaults to the cluster profile's default."""
 
@@ -228,6 +234,7 @@ def _render_slurm_script(job: Job, cluster: ClusterConfig) -> str:
 
     time_limit = job.time_limit or slurm.time_limit
     partition = job.partition or slurm.partition
+    account = job.account or slurm.account
     cpus = job.cpus_per_task or slurm.cpus_per_task
     mem = job.mem_gb or slurm.mem_gb
 
@@ -237,7 +244,7 @@ def _render_slurm_script(job: Job, cluster: ClusterConfig) -> str:
         "#!/usr/bin/env bash",
         f"#SBATCH --job-name={job.name}",
         f"#SBATCH --partition={partition}",
-        f"#SBATCH --account={slurm.account}",
+        f"#SBATCH --account={account}",
         f"#SBATCH --nodes={slurm.nodes}",
         f"#SBATCH --ntasks-per-node={slurm.tasks_per_node}",
         f"#SBATCH --cpus-per-task={cpus}",

@@ -172,6 +172,32 @@ def test_slurm_array_spec():
     assert "#SBATCH --array=0-23%4" in script
 
 
+def test_slurm_account_override():
+    """Job-level ``account`` should override the cluster profile's default."""
+    job = Job(
+        name="t", cluster="expanse", repo_path="/repo", command="echo",
+        account="ddp483",
+    )
+    cfg = get_cluster("expanse")
+    script = _render_slurm_script(job, cfg)
+    assert "#SBATCH --account=ddp483" in script
+    # Default account from profile should NOT also appear.
+    assert script.count("#SBATCH --account=") == 1
+
+
+def test_slurm_partition_and_account_override_together():
+    """Switching to a CPU partition typically also needs a matching CPU account."""
+    job = Job(
+        name="t", cluster="expanse", repo_path="/repo", command="echo",
+        partition="shared", account="csd403", gpus=0,
+    )
+    cfg = get_cluster("expanse")
+    script = _render_slurm_script(job, cfg)
+    assert "#SBATCH --partition=shared" in script
+    assert "#SBATCH --account=csd403" in script
+    assert "#SBATCH --gpus=" not in script
+
+
 def test_slurm_delta_different_from_expanse():
     """Delta should produce different partition/account than Expanse."""
     job = Job(name="t", cluster="delta", repo_path="/repo", command="echo")
